@@ -83,9 +83,14 @@ class MoreSlashCommands : Plugin() {
         }
 
         try {
-            val displayName = Attachment::class.java.getDeclaredField("displayName").apply { isAccessible = true }
+            val displayNameField = Attachment::class.java.getDeclaredField("displayName").apply { isAccessible = true }
             commands.registerCommand("spoilerfiles", "Marks attachments as spoilers") { ctx ->
-                for (a in ctx.attachments) displayName[a] = "SPOILER_" + a.displayName
+                for (a in ctx.attachments) {
+                    val currentDisplayName = displayNameField.get(a) as String
+                    if (!currentDisplayName.startsWith("SPOILER_")) {
+                        displayNameField.set(a, "SPOILER_$currentDisplayName")
+                    }
+                }
                 CommandResult(ctx.getStringOrDefault("message", ""))
             }
         } catch (e: NoSuchFieldException) {
